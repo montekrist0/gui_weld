@@ -39,56 +39,7 @@ double getCoef (const QVector <double> &X,const QVector <double> &Y, const size_
 }
 
 QVector<size_t> MainWindow::GetIntersectionPoint(const QVector <double> &X,const QVector <double> &Y){
-    int j=0;
-    size_t skostep = ui->spinBox->value(); //количество точек для интерполяции в прямую у=kх+b
-    double delta_koef_step=skostep; // шаг разницы дельт deltaKOEF[i+delta_koef_step]-deltaKOEF[i]
-    QVector <double> KOEF;
-    //vector <double> SKO;
-    for (size_t i=0;i<X.size()-skostep-1;i=i+1) {
-        KOEF.push_back(getCoef(X,Y,i,skostep));
-    }
-    //Теперь нам нужно узнать номера точек перегиба
-    QVector <double> deltaKOEF; //массив дельт(разниц) коэффициентов наклона интерполированной прямой по набору точек
-
-    for (size_t i=0;i<KOEF.size()-delta_koef_step;i++) {
-        deltaKOEF.push_back((KOEF[i+delta_koef_step]-KOEF[i])*10);
-    }
-
-    bool is_point=false;
-    double tgx10=ui->doubleSpinBox->value(); // тангенс наклона прямой равный arctg(0.1*tgx10).
-    QVector <size_t> identificators;
-    for (size_t i=0;i<deltaKOEF.size(); i++) {
-        //проверяем является ли эта точка точкой перегиба или это просто выброс
-
-        if (abs(deltaKOEF[i])>tgx10) { //
-            is_point = true; //по умолчанию считаем ее точкой перегиба
-            for (size_t j=i;j<i+4;j++) { //проверим следующие 5 точек, если и они удовлетворяют требованию, то считаем точку истинной
-                if (abs(deltaKOEF[j])<tgx10) {
-                    is_point = false;
-                    break;
-                }
-
-            }
-        }
-        else continue;
-        //закончили проверку
-
-        double sign=0.2; // коэффициент разницы соседних дельт - указывает на точку перегиба
-        if (is_point) {
-            j=i;
-            while (abs(deltaKOEF[j++])>tgx10) {
-                i++;
-            }
-            while (abs(deltaKOEF[j+1]-deltaKOEF[j])>sign) {
-                j++;
-            }
-            //            return j;
-            identificators.push_back(j);
-            i=j;
-        }
-        is_point = false; // после того как проверили очередную точку, сбрасываем флаг в 0
-    }
-    return identificators;
+    /*реализация скрыта*/
 }
 
 
@@ -148,13 +99,6 @@ void MainWindow::setInterface1() {
     myplot->legend->setFont(legendFont);
     myplot->legend->setSelectedFont(legendFont);
     myplot->legend->setSelectableParts(QCPLegend::spItems); // legend box shall not be selectable, only legend items
-    /*Конец задания легенды*/
-//    on_zoomProfile_clicked();
-//    static const int deltaY = 2;
-//    static const int deltaX = 5;
-
-//    myplot->xAxis->setRange(RangeX(X));//X[0]-deltaAxes,X[X.size()-1]+deltaAxes);
-//    myplot->yAxis->setRange(RangeY(Y));//Y[0]-deltaAxes,Y[Y.size()-1]+deltaAxes);
 
 }
 
@@ -227,15 +171,9 @@ void MainWindow::setPainter()
 
 void MainWindow::plotThreadPoints()
 {
-//    static const int deltaY = 2;
-//    static const int deltaX = 5;
-    //    std::string s = ui->lineEdit->text().toStdString();
-//    loadData("91.txt");
+
     setPainter();
     setSelectedItems();
-
-//    myplot->xAxis->setRange(RangeX(X));//X[0]-deltaAxes,X[X.size()-1]+deltaAxes);
-//    myplot->yAxis->setRange(RangeY(Y));//Y[0]-deltaAxes,Y[Y.size()-1]+deltaAxes);
 
     /*Добавляем график на виджет - начало*/
     threadProfile = myplot->addGraph();
@@ -304,10 +242,6 @@ void MainWindow::slotSelRec(const QRect &rectangle, QMouseEvent *event) {
     rect->bottomRight->setCoords(xright,yright);
     myplot->replot();
     ui->selectRegion->setEnabled(1);
-    //    QPoint leftpoint = event->pos();
-    //    double x = ui->widget->xAxis->pixelToCoord(leftpoint.x());
-    //    double y = ui->widget->yAxis->pixelToCoord(leftpoint.y());
-    //    rect->topLeft->setCoords(x,y);
 
 
     if (myplot->selectedGraphs().size()) {
@@ -448,10 +382,7 @@ void MainWindow::buildApproxClicked()
 {
 //    if (LinesWereBuild) return;
     if (!intersectionPointIndexes.size()) {
-//        intersectionPointIndexes = GetIntersectionPoint(X,Y);
 
-//        intersectionPointIndexes.push_front(0);
-//        intersectionPointIndexes.push_back(X.size()-1);
         selectKeyPointsClicked();
     }
     switch (ui->comboBox->currentIndex()) {
@@ -665,7 +596,6 @@ void MainWindow::on_checkBox_stateChanged(int arg1)
     if (ui->checkBox->isChecked()) {
         QVector<QVector<QPointF>> groupsOfPoints = filterPoints(X,Y);
         QVector<QVector<QPointF>> filteredGroups;
-//        qDebug()<<"groupsOfPoints.size() = " << groupsOfPoints.size();
         for (int i=1; i<groupsOfPoints.size()-1;i++) {
             double avLeft = averageValue(groupsOfPoints[i-1]);
             double avMid = averageValue(groupsOfPoints[i]);
@@ -676,7 +606,6 @@ void MainWindow::on_checkBox_stateChanged(int arg1)
                 filteredGroups.push_back(groupsOfPoints[i+1]);
             }
         }
-//        qDebug()<<"filteredGroups.size() = " << groupsOfPoints.size();
         X.clear();
         Y.clear();
         for (auto x:groupsOfPoints/*filteredGroups*/) {
@@ -710,6 +639,5 @@ void MainWindow::on_comboBox_2_currentIndexChanged(const QString &arg1)
     plotThreadPoints();
     if (ui->checkBox->isChecked()) {
         on_checkBox_stateChanged(0);
-//        myplot->replot();
     }
 }
